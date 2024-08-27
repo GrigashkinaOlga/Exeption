@@ -36,28 +36,69 @@
 // Критерии оценивания: Слушатель написал приложение, которое запрашивает у пользователя следующие данные, 
 // разделенные пробелом: Фамилия Имя Отчество дата _ рождения номер _ телефона пол
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.FileSystemException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
 
 public class DZTask1 {
     public static void main(String[] args) {
-        info();
+        try {
+            info();
+            System.out.println("success");
+        } catch (FileSystemException e){
+            System.out.println(e.getMessage());
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
     }
 
-    public static void info() {
+    public static void info() throws Exception {
         Scanner scanner = new Scanner(System.in);
-        int[] arr = new int[10];
         System.out.println(
                 "Введите информацию о себе в формате:" +
-                        "Иванов Иван Иванович 01.01.2000 89139131313 мужской");
+                        "Иванов Иван Иванович 01.01.2000 89139131313 m");
+        String text = scanner.nextLine();
+        String[] info = text.split(" ");
+        if (info.length != 6) {
+            throw new Exception("Введено неверное количество параметров");
+        }
+        String surname = info[0];
+        String name = info[1];
+        String patronymic = info[2];
+    
+        SimpleDateFormat format = new SimpleDateFormat("dd.mm.yyyy");
+        Date birthdate;
         try {
-            int index = scanner.nextInt();
-            arr[index] = 1;
-        } catch (IndexOutOfBoundsException e) {
-            System.err.println("Указан индекс за пределами массива");
-            
-        } catch (InputMismatchException e) {
-            System.err.println("идекс целое число");
-
+            birthdate = format.parse(info[3]);
+        } catch (ParseException e) {
+            throw new ParseException("Неверный формат даты рождения", e.getErrorOffset());
+        }
+        int phone;
+        try {
+            phone = Integer.parseInt(info[4]);
+        } catch (NumberFormatException e){
+            throw new NumberFormatException("Неверный формат телефона");
+        }
+        String sex = info[5];
+        if (!sex.toLowerCase().equals("m") && !sex.toLowerCase().equals("f")){
+            throw new RuntimeException("Неверно введен пол");
+        }
+        String fileName = surname.toLowerCase() + ".txt";
+        File file = new File(fileName);
+        try (FileWriter fileWriter = new FileWriter(file, true)){
+            if (file.length() > 0){
+                fileWriter.write('\n');
+            }
+            fileWriter.write(String.format("%s %s %s %s %s %s", surname, name, patronymic, format.format(birthdate), phone, sex));
+        } catch (IOException e){
+            throw new FileSystemException("Возникла ошибка при работе с файлом");
+        }
     }
 }
-}
+
+
